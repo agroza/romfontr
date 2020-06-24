@@ -12,6 +12,7 @@ uses
 
 type
   TParameterError = (
+    erOffset,
     erROMFile,
     erFontFile
   );
@@ -40,11 +41,13 @@ const
   sTypeHelp               = 'Type:' + #13#10 +
                             '  romfontr.exe -help';
   sHelpUsage              = 'Usage is:' + #13#10 +
-                            '  romfontr.exe [-help] [-u] -romfile=videorom.bin -fontfile=fonts.bin' + #13#10;
+                            '  romfontr.exe [-help] [-u] -offset=461C' + #13#10 +
+			    '    -romfile=videorom.bin -fontfile=fonts.bin' + #13#10;
   sHelpParameters1        = 'Where:' + #13#10 +
                             '  -help     shows this screen; all other parameters are ignored' + #13#10 +
                             '  -u        updates the ROM 8-bit checksum';
-  sHelpParameters2        = '  -romfile  specifies the path and filename of the binary Video ROM file' + #13#10 +
+  sHelpParameters2        = '  -offset   specifies the hexadecimal font index in the binary Video ROM file';
+  sHelpParameters3        = '  -romfile  specifies the path and filename of the binary Video ROM file' + #13#10 +
                             '  -fontfile specifies the path and filename of the binary Fonts ROM file';
 
   sCannotOpenInputFile    = 'Cannot open input file ';
@@ -65,6 +68,7 @@ const
   );
 
   sParameterErrors: array[TParameterError] of String = (
+    'Offset',
     'ROM File',
     'Fonts File'
   );
@@ -72,14 +76,14 @@ const
   { program commandline parameters }
   pHelp                   = '-help';
   pUpdateChecksum         = '-u';
+  pOffset                 = '-offset=';
   pROMFileName            = '-romfile=';
   pFontFileName           = '-fontfile=';
 
   { single character constants }
+  cHexIdentifier          = '$';
   cEqual                  = '=';
   cFullStop               = '.';
-
-  kROMFontOffset       = 17948;
 
   { color constants }
   clError                 = Red;
@@ -122,6 +126,22 @@ asm
 @exit:
   pop ds
 
+end;
+
+function StrToIntDef(const AString: String; const ADefault: Longint): Longint;
+var
+  LValue: Longint;
+  LErrorCode: Integer;
+
+begin
+  Val(AString, LValue, LErrorCode);
+  if LErrorCode = 0 then
+  begin
+    StrToIntDef := LValue;
+  end else
+  begin
+    StrToIntDef := ADefault;
+  end;
 end;
 
 function IntToHex(const AInteger: Integer): String;
@@ -207,9 +227,16 @@ begin
   begin
     AParameters.UpdateChecksum := FindSimpleParameter(pUpdateChecksum);
 
+    if FindComplexParameter(pOffset, LValue) then
+    begin
+      AParameters.Offset := StrToIntDef(cHexIdentifier + Copy(LValue, Succ(Pos(cEqual, LValue)), 4), 0);
+
+      Exclude(AParameters.Errors, erOffset);
+    end;
+
     if FindComplexParameter(pROMFileName, LValue) then
     begin
-      Aparameters.ROMFileName := LValue;
+      AParameters.ROMFileName := LValue;
       Delete(AParameters.ROMFileName, 1, Pos(cEqual, LValue));
 
       Exclude(AParameters.Errors, erROMFile);
@@ -245,6 +272,7 @@ begin
   Writeln(sHelpUsage);
   Writeln(sHelpParameters1);
   Writeln(sHelpParameters2);
+  Writeln(sHelpParameters3);
 end;
 
 procedure WriteParameterErrors(const AParameterErrors: TParameterErrors);
@@ -443,8 +471,6 @@ begin
   begin
     if ProcessParameters(GParameters) then
     begin
-      GParameters.Offset := kROMFontOffset;
-
       if ReplaceROMFont(GParameters) then
       begin
         WriteStatistics(GParameters);
