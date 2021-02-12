@@ -4,7 +4,7 @@ ROM Font Replacer
 This program modifies the standard VGA ROM fonts in a VGA ROM BIOS binary file.\
 I wrote it to modify the fonts on my ISA VGA card with a font that I wanted to create for a long time.
 
-Read more here: [Microelectronics - VGA ROM Fonts Essay](http://www.alexandrugroza.ro/microelectronics/vga-rom-fonts/index.html)
+Read more here: [Microelectronics - VGA ROM Fonts Essay](http://www.alexandrugroza.ro/microelectronics/essays-and-research/vga-rom-fonts/index.html)
 
 ```
 Usage is:
