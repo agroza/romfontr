@@ -8,13 +8,14 @@ Read more here: [Microelectronics - VGA ROM Fonts Essay](http://www.alexandrugro
 
 ```
 Usage is:
-  romfontr.exe [-help] [-u] -offset=461C
-    -romfile=videorom.bin -fontfile=fonts.bin
+  romfontr.exe [-help] [-u] -offset=461C|AUTO
+    -romfile=videorom.bin -fontfile=8x16font.bin
 
 Where:
   -help     shows this screen; all other parameters are ignored
   -u        updates the ROM 8-bit checksum
   -offset   specifies the hexadecimal font index in the binary Video ROM file
+            if set to AUTO, it will attempt to figure out the font offset
   -romfile  specifies the path and filename of the binary Video ROM file
   -fontfile specifies the path and filename of the binary Fonts ROM file
 ```
