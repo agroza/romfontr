@@ -19,19 +19,21 @@ type
   TParameterErrors = set of TParameterError;
 
   TParameters = record
-    Offset: Integer;
-    FontFileSize: Integer;
+    Offset: Longint;
+    FontFileSize: Longint;
     UpdateChecksum: Boolean;
     ROMFileName: String;
     FontFileName: String;
     Errors: TParameterErrors;
   end;
 
+  TBinaryFile = File of Byte;
+
 const
   { program stringtable }
   sEmpty                  = '';
 
-  sProgramTitle           = 'ROM Font Replacer  VER: 0.1 REV: B';
+  sProgramTitle           = 'ROM Font Replacer  VER: 0.4 REV: G';
   sProgramCopyright       = 'Copyright (C) 1998-2020 Microprogramming TECHNIQUES';
   sProgramAuthor          = 'Programming/PC Code: Alexandru Groza';
   sProgramRights          = 'All rights reserved.';
@@ -41,12 +43,13 @@ const
   sTypeHelp               = 'Type:' + #13#10 +
                             '  romfontr.exe -help';
   sHelpUsage              = 'Usage is:' + #13#10 +
-                            '  romfontr.exe [-help] [-u] -offset=461C' + #13#10 +
-			    '    -romfile=videorom.bin -fontfile=fonts.bin' + #13#10;
+                            '  romfontr.exe [-help] [-u] -offset=461C|AUTO' + #13#10 +
+                            '    -romfile=videorom.bin -fontfile=8x16font.bin' + #13#10;
   sHelpParameters1        = 'Where:' + #13#10 +
                             '  -help     shows this screen; all other parameters are ignored' + #13#10 +
                             '  -u        updates the ROM 8-bit checksum';
-  sHelpParameters2        = '  -offset   specifies the hexadecimal font index in the binary Video ROM file';
+  sHelpParameters2        = '  -offset   specifies the hexadecimal font offset in the binary Video ROM file' + #13#10 +
+                            '            if set to AUTO, it will attempt to figure out the font offset';
   sHelpParameters3        = '  -romfile  specifies the path and filename of the binary Video ROM file' + #13#10 +
                             '  -fontfile specifies the path and filename of the binary Fonts ROM file';
 
@@ -79,6 +82,9 @@ const
   pOffset                 = '-offset=';
   pROMFileName            = '-romfile=';
   pFontFileName           = '-fontfile=';
+
+  pOffsetAuto             = 'auto';
+  kOffsetAuto             = -1;
 
   { single character constants }
   cHexIdentifier          = '$';
@@ -144,24 +150,17 @@ begin
   end;
 end;
 
-function IntToHex(const AInteger: Integer): String;
+function IntToHex(const AValue: Longint): String;
 const
-  kHexLength = 4;
   kHexDigits: array[0..15] of Char = '0123456789ABCDEF';
 
-var
-  I: Integer;
-  LInteger: Integer;
-
 begin
-  LInteger := AInteger;
-
-  IntToHex[0] := Char(kHexLength);
-
-  for I := kHexLength downto 1 do
+  if AValue <= 0 then
   begin
-    IntToHex[I] := kHexDigits[LInteger and $F];
-    LInteger := LInteger shr 4;
+    IntToHex := sEmpty;
+  end else
+  begin
+    IntToHex := IntToHex(AValue div $10) + kHexDigits[AValue mod $10];
   end;
 end;
 
@@ -217,6 +216,7 @@ end;
 function ProcessParameters(var AParameters: TParameters): Boolean;
 var
   LValue: String;
+  LAutoValue: String;
 
 begin
   FillChar(AParameters, SizeOf(AParameters), $00);
@@ -229,7 +229,15 @@ begin
 
     if FindComplexParameter(pOffset, LValue) then
     begin
-      AParameters.Offset := StrToIntDef(cHexIdentifier + Copy(LValue, Succ(Pos(cEqual, LValue)), 4), 0);
+      LAutoValue := LowerCase(Copy(LValue, Succ(Pos(cEqual, LValue)), 4));
+
+      if LAutoValue = pOffsetAuto then
+      begin
+        AParameters.Offset := kOffsetAuto;
+      end else
+      begin
+        AParameters.Offset := StrToIntDef(cHexIdentifier + LAutoValue, 0);
+      end;
 
       Exclude(AParameters.Errors, erOffset);
     end;
@@ -328,13 +336,74 @@ begin
   Writeln;
 end;
 
-function ReplaceROMFont(var AParameters: TParameters): Boolean;
+function LocateFontOffset(var AROMFile, AFontFile: TBinaryFile): Longint;
+const
+  kIDFont8x8: array[0..7] of Byte = (0, 0, 0, 0, 0, 0, 0, 0);
+  kIDFont8x14: array[0..13] of Byte = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  kIDFont8x16: array[0..15] of Byte = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
 var
-  I: Integer;
+  LSearchBuffer: array[0..15] of Byte;
+  LBytesRead: Word;
+
+begin
+  LocateFontOffset := 0;
+
+  Seek(AROMFile, 0);
+
+  { TODO -oagroza -cRemove : Temporary code to support missing functionality. }
+
+  WriteError('AUTO parameter is not supported in this version.');
+  WriteError('Code execution halted.');
+  Halt(1);
+end;
+
+function UpdateChecksum(var AROMFile: TBinaryFile; const AROMFileName: String): Boolean;
+var
+  I: Longint;
   LByte: Byte;
   LChecksum: Byte;
-  LROMFile: File of Byte;
-  LFontFile: File of Byte;
+
+begin
+  UpdateChecksum := False;
+
+  Seek(AROMFile, 0);
+
+  LChecksum := 0;
+
+  for I := 0 to Pred(Pred(FileSize(AROMFile))) do
+  begin
+{$I-}
+    Read(AROMFile, LByte);
+{$I+}
+    if IOResult <> 0 then
+    begin
+      Writeln(sCannotReadOutputFile, AROMFileName);
+      Exit;
+    end;
+
+    LChecksum := LChecksum + LByte;
+  end;
+
+  LChecksum := (256 - LChecksum) mod 256;
+{$I-}
+  Write(AROMFile, LChecksum);
+{$I+}
+  if IOResult <> 0 then
+  begin
+    WriteError(sCannotWriteOutputFile + AROMFileName);
+    Exit;
+  end;
+
+  UpdateChecksum := True;
+end;
+
+function ReplaceROMFont(var AParameters: TParameters): Boolean;
+var
+  I: Longint;
+  LByte: Byte;
+  LROMFile: TBinaryFile;
+  LFontFile: TBinaryFile;
 
 begin
   ReplaceROMFont := False;
@@ -365,8 +434,6 @@ begin
     Exit;
   end;
 
-  Seek(LROMFile, AParameters.Offset);
-
 {$I-}
   Assign(LFontFile, AParameters.FontFileName);
   FileMode := fmReadOnly;
@@ -376,10 +443,18 @@ begin
   begin
     WriteError(sCannotOpenInputFile + AParameters.FontFileName);
 {$I-}
+    Close(LROMFile);
     Close(LFontFile);
 {$I+}
     Exit;
   end;
+
+  if AParameters.Offset = kOffsetAuto then
+  begin
+    AParameters.Offset := LocateFontOffset(LROMFile, LFontFile);
+  end;
+
+  Seek(LROMFile, AParameters.Offset);
 
   for I := 0 to Pred(FileSize(LFontFile)) do
   begin
@@ -390,8 +465,8 @@ begin
     begin
       WriteError(sCannotReadInputFile + AParameters.FontFileName);
 {$I-}
-      Close(LFontFile);
       Close(LROMFile);
+      Close(LFontFile);
 {$I+}
       Exit;
     end;
@@ -413,35 +488,9 @@ begin
 
   if AParameters.UpdateChecksum then
   begin
-    Seek(LROMFile, 0);
-
-    LChecksum := 0;
-
-    for I := 0 to Pred(Pred(FileSize(LROMFile))) do
+    if not UpdateChecksum(LROMFile, AParameters.ROMFileName) then
     begin
-{$I-}
-      Read(LROMFile, LByte);
-{$I+}
-      if IOResult <> 0 then
-      begin
-        Writeln(sCannotReadOutputFile, AParameters.ROMFileName);
-{$I-}
-        Close(LROMFile);
-        Close(LFontFile);
-{$I+}
-        Exit;
-      end;
-
-      LChecksum := LChecksum + LByte;
-    end;
-
-    LChecksum := (256 - LChecksum) mod 256;
-{$I-}
-    Write(LROMFile, LChecksum);
-{$I+}
-    if IOResult <> 0 then
-    begin
-      WriteError(sCannotWriteOutputFile + AParameters.ROMFileName);
+      AParameters.UpdateChecksum := False;
 {$I-}
       Close(LROMFile);
       Close(LFontFile);
