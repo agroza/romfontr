@@ -29,12 +29,19 @@ type
 
   TBinaryFile = File of Byte;
 
+  TFontType = (
+    ftUnknown,
+    ft8x8,
+    ft8x14,
+    ft8x16
+  );
+
 const
   { program stringtable }
   sEmpty                  = '';
 
-  sProgramTitle           = 'ROM Font Replacer  VER: 0.4 REV: G';
-  sProgramCopyright       = 'Copyright (C) 1998-2020 Microprogramming TECHNIQUES';
+  sProgramTitle           = 'ROM Font Replacer  VER: 0.5 REV: A';
+  sProgramCopyright       = 'Copyright (C) 1998-2021 Microprogramming TECHNIQUES';
   sProgramAuthor          = 'Programming/PC Code: Alexandru Groza';
   sProgramRights          = 'All rights reserved.';
 
@@ -49,7 +56,7 @@ const
                             '  -help     shows this screen; all other parameters are ignored' + #13#10 +
                             '  -u        updates the ROM 8-bit checksum';
   sHelpParameters2        = '  -offset   specifies the hexadecimal font offset in the binary Video ROM file' + #13#10 +
-                            '            if set to AUTO, it will attempt to figure out the font offset';
+                            '            if set to AUTO, the program will try to figure out the font offset';
   sHelpParameters3        = '  -romfile  specifies the path and filename of the binary Video ROM file' + #13#10 +
                             '  -fontfile specifies the path and filename of the binary Fonts ROM file';
 
@@ -58,22 +65,34 @@ const
   sCannotOpenOutputFile   = 'Cannot open output file ';
   sCannotReadOutputFile   = 'Cannot read output file ';
   sCannotWriteOutputFile  = 'Cannot write output file ';
+  sCannotSeekInFile       = 'Cannot seek in file ';
 
   sFileNameError          = ' path and filename cannot be empty.';
+
+  sAutodetOffset1         = 'Automatic detection of ';
+  sAutodetOffset2         = ' fonts revealed offset ';
+  sAutodetFailed          = ' fonts failed.';
 
   sStatisticsWrote        = 'Wrote ';
   sStatisticsBytesOffset  = ' bytes at offset ';
   sStatisticsChecksum     = 'Checksum updated: ';
 
-  sYesNo: array[Boolean] of String = (
+  sYesNo: array[Boolean] of String[3] = (
     'NO',
     'YES'
   );
 
-  sParameterErrors: array[TParameterError] of String = (
+  sParameterErrors: array[TParameterError] of String[10] = (
     'Offset',
     'ROM File',
     'Fonts File'
+  );
+
+  sFontTypes: array[TFontType] of String[7] = (
+    'unknown',
+    '8x8',
+    '8x16',
+    '9x16'
   );
 
   { program commandline parameters }
@@ -152,7 +171,7 @@ end;
 
 function IntToHex(const AValue: Longint): String;
 const
-  kHexDigits: array[0..15] of Char = '0123456789ABCDEF';
+  kHexDigits: array[$00..$0F] of Char = '0123456789ABCDEF';
 
 begin
   if AValue <= 0 then
@@ -304,6 +323,31 @@ begin
   Writeln(sTypeHelp);
 end;
 
+procedure WriteFontTypeOffset(const AFontType: TFontType; const AOffset: Longint);
+begin
+  TextColor(clNormal);
+  Write(sAutodetOffset1);
+
+  TextColor(clHighlight);
+  Write(sFontTypes[AFontType]);
+
+  TextColor(clNormal);
+
+  if AOffset = 0 then
+  begin
+    Writeln(sAutodetFailed);
+  end else
+  begin
+    Write(sAutodetOffset2);
+
+    TextColor(clHighlight);
+    Write(IntToHex(AOffset));
+
+    TextColor(clNormal);
+    Writeln(cFullStop);
+  end;
+end;
+
 procedure WriteStatistics(const AParameters: TParameters);
 begin
   Write(sStatisticsWrote);
@@ -336,7 +380,29 @@ begin
   Writeln;
 end;
 
-function LocateFontOffset(var AROMFile, AFontFile: TBinaryFile): Longint;
+function DetectFontType(var AFontFile: TBinaryFile): TFontType;
+const
+  k8x8FontSize  = 2048;
+  k8x14FontSize = 3584;
+  k8x16FontSize = 4096;
+
+begin
+  case FileSize(AFontFile) of
+    k8x8FontSize:
+      DetectFontType := ft8x8;
+
+    k8x14FontSize:
+      DetectFontType := ft8x14;
+
+    k8x16FontSize:
+      DetectFontType := ft8x16;
+
+  else
+    DetectFontType := ftUnknown;
+  end;
+end;
+
+function DetectFontOffset(var AROMFile: TBinaryFile; const AFontType: TFontType): Longint;
 const
   kIDFont8x8: array[0..7] of Byte = (0, 0, 0, 0, 0, 0, 0, 0);
   kIDFont8x14: array[0..13] of Byte = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -347,9 +413,45 @@ var
   LBytesRead: Word;
 
 begin
-  LocateFontOffset := 0;
+  case AFontType of
+    ftUnknown:
+      DetectFontOffset := 0;
 
+    ft8x8:
+      DetectFontOffset := 10;
+
+    ft8x14:
+      DetectFontOffset := 20;
+
+    ft8x16:
+      DetectFontOffset := 30;
+
+  end;
+
+{$I-}
   Seek(AROMFile, 0);
+{$I+}
+  if IOResult <> 0 then
+  begin
+    Writeln(sCannotSeekInFile, {AROMFileName}'???');
+    Exit;
+  end;
+
+  { TODO -oagroza -cImplement : Detection of font offset within video ROM file. }
+end;
+
+function LocateFontOffset(var AROMFile, AFontFile: TBinaryFile): Longint;
+var
+  LFontType: TFontType;
+  LOffset: Longint;
+
+begin
+  LFontType := DetectFontType(AFontFile);
+  LOffset := DetectFontOffset(AROMFile, LFontType);
+
+  WriteFontTypeOffset(LFontType, LOffset);
+
+  LocateFontOffset := LOffset;
 
   { TODO -oagroza -cRemove : Temporary code to support missing functionality. }
 
@@ -367,7 +469,14 @@ var
 begin
   UpdateChecksum := False;
 
+{$I-}
   Seek(AROMFile, 0);
+{$I+}
+  if IOResult <> 0 then
+  begin
+    Writeln(sCannotSeekInFile, AROMFileName);
+    Exit;
+  end;
 
   LChecksum := 0;
 
@@ -454,7 +563,18 @@ begin
     AParameters.Offset := LocateFontOffset(LROMFile, LFontFile);
   end;
 
+{$I-}
   Seek(LROMFile, AParameters.Offset);
+{$I+}
+  if IOResult <> 0 then
+  begin
+    Writeln(sCannotSeekInFile, AParameters.ROMFileName);
+{$I-}
+    Close(LROMFile);
+    Close(LFontFile);
+{$I+}
+    Exit;
+  end;
 
   for I := 0 to Pred(FileSize(LFontFile)) do
   begin
