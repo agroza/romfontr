@@ -15,7 +15,7 @@ Where:
   -help     shows this screen; all other parameters are ignored
   -u        updates the ROM 8-bit checksum
   -offset   specifies the hexadecimal font index in the binary Video ROM file
-            if set to AUTO, it will attempt to figure out the font offset
+            if set to AUTO, the program will try to figure out the font offset
   -romfile  specifies the path and filename of the binary Video ROM file
   -fontfile specifies the path and filename of the binary Fonts ROM file
 ```
