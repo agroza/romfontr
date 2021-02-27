@@ -8,7 +8,7 @@ I wrote an essay on replacing the VGA fonts in a Video ROM BIOS image. You can r
 
 ### Program Usage
 
-I pasted these lines straight from the commandline help screen.
+The following lines are taken directly from the commandline help screen.
 
 ```
 Usage is:
