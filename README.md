@@ -1,12 +1,14 @@
 # romfontr
-Video ROM Font Replacer
 
 ## Synopsis
-This program modifies the standard VGA ROM fonts in any VGA ROM BIOS binary file.\
-I originally wrote it to modify the fonts on my Tseng Labs ET4000/W32i ISA VGA card with my own versions that I wanted to create for a long time.\
-In the meantime I finished working on my DIY ISA Video Display Controller card. So now I am using ```romfontr``` with this card instead.
+The Video ROM Font Replacer program modifies the standard VGA ROM fonts in any 16-bit VGA ROM BIOS binary file.\
+I originally wrote it to modify the fonts on my Tseng Labs ET4000/W32i ISA VGA card with my own versions that I wanted to create for a long time. In the meantime I finished working on my DIY ISA Video Display Controller card. So now I am using ```romfontr``` with this card instead.
 
-Read more here: [Microelectronics - VGA ROM Fonts Essay](http://www.alexandrugroza.ro/microelectronics/essays-research/vga-rom-fonts/index.html)
+I wrote an essay on replacing the VGA fonts in a Video ROM BIOS image. You can read it here: [Microelectronics - VGA ROM Fonts Essay](http://www.alexandrugroza.ro/microelectronics/essays-research/vga-rom-fonts/index.html)
+
+### Program Usage
+
+I pasted these lines straight from the commandline help screen.
 
 ```
 Usage is:
