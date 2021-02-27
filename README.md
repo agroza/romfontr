@@ -1,8 +1,9 @@
 # romfontr
-ROM Font Replacer
+Video ROM Font Replacer
 
 This program modifies the standard VGA ROM fonts in a VGA ROM BIOS binary file.\
-I wrote it to modify the fonts on my ISA VGA card with a font that I wanted to create for a long time.
+I wrote it originally to modify the fonts on my Tseng Labs ISA VGA card with a font that I wanted to create for a long time.
+Now I am using it for the fonts of my DIY ISA Video Display Controller card.
 
 Read more here: [Microelectronics - VGA ROM Fonts Essay](http://www.alexandrugroza.ro/microelectronics/essays-research/vga-rom-fonts/index.html)
 
@@ -13,9 +14,10 @@ Usage is:
 
 Where:
   -help     shows this screen; all other parameters are ignored
-  -u        updates the ROM 8-bit checksum
-  -offset   specifies the hexadecimal font index in the binary Video ROM file
+  -u        updates the video ROM file 8-bit checksum
+  -offset   specifies the hexadecimal font offset in the binary video ROM file
             if set to AUTO, the program will try to figure out the font offset
-  -romfile  specifies the path and filename of the binary Video ROM file
-  -fontfile specifies the path and filename of the binary Fonts ROM file
+            according to the given binary font file
+  -romfile  specifies the path and filename of the binary video ROM file
+  -fontfile specifies the path and filename of the binary font file
 ```
