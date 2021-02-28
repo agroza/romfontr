@@ -21,9 +21,13 @@ type
   TParameters = record
     Offset: Longint;
     FontFileSize: Longint;
+    BackupStatus: Boolean;
+
+    BackupROMFile: Boolean;
     UpdateChecksum: Boolean;
     ROMFileName: String;
     FontFileName: String;
+
     Errors: TParameterErrors;
   end;
 

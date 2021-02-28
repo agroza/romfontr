@@ -10,6 +10,7 @@ program romfontr;
 
 uses
   Crt,
+  Dos,
   Consts,
   FontDet,
   Routines,
@@ -39,6 +40,7 @@ begin
 
   if ParamCount > 0 then
   begin
+    AParameters.BackupROMFile := FindSimpleParameter(pBackupROMFile);
     AParameters.UpdateChecksum := FindSimpleParameter(pUpdateChecksum);
 
     if FindComplexParameter(pOffset, LValue) then
@@ -50,7 +52,7 @@ begin
         AParameters.Offset := kOffsetAuto;
       end else
       begin
-        AParameters.Offset := StrToIntDef(cHexIdentifier + LAutoValue, 0);
+        AParameters.Offset := StrToIntDef(cDollarSign + LAutoValue, 0);
       end;
 
       Exclude(AParameters.Errors, erOffset);
@@ -159,9 +161,27 @@ begin
 
   TextColor(clNormal);
   Writeln(cFullStop);
+  Write(sStatisticsBackup);
+
+  TextColor(clErrorSuccess[AParameters.BackupROMFile]);
+  Write(sYesNo[AParameters.BackupROMFile]);
+
+  if AParameters.BackupROMFile then
+  begin
+    TextColor(clNormal);
+    Write(cSpace + cOpenBracket);
+
+    TextColor(clErrorSuccess[AParameters.BackupStatus]);
+    Write(sFailedSucceeded[AParameters.BackupStatus]);
+
+    TextColor(clNormal);
+    Writeln(cClosedBracket);
+  end;
+
+  TextColor(clNormal);
   Write(sStatisticsChecksum);
 
-  TextColor(clHighlight);
+  TextColor(clErrorSuccess[AParameters.UpdateChecksum]);
   Write(sYesNo[AParameters.UpdateChecksum]);
 
   TextColor(clNormal);
@@ -254,6 +274,14 @@ begin
   begin
     WriteError(sParameterErrors[erFontFile] + sFileNameError);
     Exit;
+  end;
+
+  if AParameters.BackupROMFile then
+  begin
+    AParameters.BackupStatus := FileCopy(
+      AParameters.ROMFileName,
+      ReplaceFileExt(FExpand(AParameters.ROMFileName), fmBAKFiles)
+    );
   end;
 
   if not FileOpen(LROMFile, AParameters.ROMFileName, fmReadWrite) then

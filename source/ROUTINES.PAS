@@ -20,6 +20,10 @@ function IntToHex(const AValue: Longint): String;
 function StrToIntDef(const AString: String; const ADefault: Longint): Longint;
 function LowerCase(const AString: String): String;
 
+function ReplaceFileExt(const AFileName, AExtension: String): String;
+
+function FileCopy(const ASourceFileName, ADestFileName: String): Boolean;
+
 function FileOpen(var ABinaryFile: TBinaryFile; const AFileName: String;
   const AFileMode: Byte): Boolean;
 function FileClose(var ABinaryFile: TBinaryFile): Boolean;
@@ -30,7 +34,8 @@ function FileSeek(var ABinaryFile: TBinaryFile; const APosition: Longint): Boole
 implementation
 
 uses
-  Consts;
+  Consts,
+  Dos;
 
 { public declarations }
 
@@ -132,6 +137,55 @@ asm
 @exit:
   pop ds
 
+end;
+
+function ReplaceFileExt(const AFileName, AExtension: String): String;
+var
+  I: Byte;
+
+begin
+  for I := Length(AFileName) downto 1 do
+    if AFileName[I] = cFullStop then
+      Break;
+
+  if (I = 1) and (AFileName[I] <> cFullStop) then
+  begin
+    ReplaceFileExt := AFileName;
+  end else
+  begin
+    ReplaceFileExt := Copy(AFileName, 1, I) + AExtension;
+  end;
+end;
+
+function FileCopy(const ASourceFileName, ADestFileName: String): Boolean;
+var
+  LFileTime: Longint;
+  LSourceFile: File;
+  LDestFile: File;
+  LBytesRead: Word;
+  LBytesWritten: Word;
+  LBuffer: array[1..2048] of Byte;
+
+begin
+{$I-}
+  Assign(LSourceFile, ASourceFileName);
+  FileMode := fmReadOnly;
+  Reset(LSourceFile, 1);
+
+  Assign(LDestFile, ADestFileName);
+  FileMode := fmReadWrite;
+  Rewrite(LDestFile, 1);
+
+  GetFTime(LSourceFile, LFileTime);
+
+  repeat
+    BlockRead(LSourceFile, LBuffer, SizeOf(LBuffer), LBytesRead);
+    BlockWrite(LDestFile, LBuffer, LBytesRead, LBytesWritten);
+  until (LBytesRead = 0) or (LBytesWritten <> LBytesRead);
+
+  SetFTime(LDestFile, LFileTime);
+{$I+}
+  FileCopy := IOResult = 0;
 end;
 
 function FileOpen(var ABinaryFile: TBinaryFile; const AFileName: String;
