@@ -12,11 +12,12 @@ The following lines are taken directly from the commandline help screen.
 
 ```
 Usage is:
-  romfontr.exe [-help] [-u] -offset=461C|AUTO
+  romfontr.exe [-help] [-b] [-u] -offset=461C|AUTO
     -romfile=videorom.bin -fontfile=8x16font.bin
 
 Where:
   -help     shows this screen; all other parameters are ignored
+  -b        makes a backup of the binary video ROM file
   -u        updates the video ROM file 8-bit checksum
   -offset   specifies the hexadecimal font offset in the binary video ROM file
             if set to AUTO, the program will try to figure out the font offset
