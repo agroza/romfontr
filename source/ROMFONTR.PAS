@@ -164,7 +164,7 @@ begin
   Write(sStatisticsBackup);
 
   TextColor(clErrorSuccess[AParameters.BackupROMFile]);
-  Write(sYesNo[AParameters.BackupROMFile]);
+  Writeln(sYesNo[AParameters.BackupROMFile]);
 
   if AParameters.BackupROMFile then
   begin
@@ -182,7 +182,7 @@ begin
   Write(sStatisticsChecksum);
 
   TextColor(clErrorSuccess[AParameters.UpdateChecksum]);
-  Write(sYesNo[AParameters.UpdateChecksum]);
+  Writeln(sYesNo[AParameters.UpdateChecksum]);
 
   TextColor(clNormal);
   Writeln;

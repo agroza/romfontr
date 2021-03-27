@@ -18,7 +18,7 @@ const
   { program stringtable }
   sEmpty                  = '';
 
-  sProgramTitle           = 'Video ROM Font Replacer  VER: 0.6 REV: A';
+  sProgramTitle           = 'Video ROM Font Replacer  VER: 0.6 REV: D';
   sProgramCopyright       = 'Copyright (C) 1998-2021 Microprogramming TECHNIQUES';
   sProgramAuthor          = 'Programming/PC Code: Alexandru Groza';
   sProgramRights          = 'All rights reserved.';
@@ -77,8 +77,8 @@ const
   sFontTypes: array[TFontType] of String[7] = (
     'unknown',
     '8x8',
-    '8x16',
-    '9x16'
+    '8x14',
+    '8x16'
   );
 
   { program commandline parameters }
