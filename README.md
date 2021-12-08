@@ -1,6 +1,6 @@
-# Video ROM Font Replacer
+# romfontr
 
-This project is also known as ```romfontr```.
+Video ROM Font Replacer Program
 
 ## Synopsis
 The Video ROM Font Replacer program modifies the standard VGA ROM fonts in any 16-bit VGA ROM BIOS binary file.\
