@@ -16,7 +16,7 @@ uses
 function FindSimpleParameter(const AParameter: String): Boolean;
 function FindComplexParameter(const AParameter: String; var AValue: String): Boolean;
 
-function IntToHex(const AValue: Longint): String;
+function IntToHex(const AInteger: Integer): String;
 function StrToIntDef(const AString: String; const ADefault: Longint): Longint;
 function LowerCase(const AString: String): String;
 
@@ -24,8 +24,7 @@ function ReplaceFileExt(const AFileName, AExtension: String): String;
 
 function FileCopy(const ASourceFileName, ADestFileName: String): Boolean;
 
-function FileOpen(var ABinaryFile: TBinaryFile; const AFileName: String;
-  const AFileMode: Byte): Boolean;
+function FileOpen(var ABinaryFile: TBinaryFile; const AFileName: String; const AFileMode: Byte): Boolean;
 function FileClose(var ABinaryFile: TBinaryFile): Boolean;
 function FileReadByte(var ABinaryFile: TBinaryFile; var AByte: Byte): Boolean;
 function FileWriteByte(var ABinaryFile: TBinaryFile; var AByte: Byte): Boolean;
@@ -77,17 +76,24 @@ begin
   end;
 end;
 
-function IntToHex(const AValue: Longint): String;
+function IntToHex(const AInteger: Integer): String;
 const
+  kHexLength = 4;
   kHexDigits: array[$00..$0F] of Char = '0123456789ABCDEF';
 
+var
+  I: Integer;
+  LInteger: Integer;
+
 begin
-  if AValue <= 0 then
+  LInteger := AInteger;
+
+  IntToHex[0] := Char(kHexLength);
+
+  for I := kHexLength downto 1 do
   begin
-    IntToHex := sEmpty;
-  end else
-  begin
-    IntToHex := IntToHex(AValue div $10) + kHexDigits[AValue mod $10];
+    IntToHex[I] := kHexDigits[LInteger and $0F];
+    LInteger := LInteger shr $04;
   end;
 end;
 
@@ -136,7 +142,6 @@ asm
 
 @exit:
   pop ds
-
 end;
 
 function ReplaceFileExt(const AFileName, AExtension: String): String;
@@ -188,8 +193,7 @@ begin
   FileCopy := IOResult = 0;
 end;
 
-function FileOpen(var ABinaryFile: TBinaryFile; const AFileName: String;
-  const AFileMode: Byte): Boolean;
+function FileOpen(var ABinaryFile: TBinaryFile; const AFileName: String; const AFileMode: Byte): Boolean;
 begin
 {$I-}
   Assign(ABinaryFile, AFileName);

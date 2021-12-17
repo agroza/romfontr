@@ -18,7 +18,7 @@ const
   { program stringtable }
   sEmpty                  = '';
 
-  sProgramTitle           = 'Video ROM Font Replacer  VER: 0.6 REV: D';
+  sProgramTitle           = 'Video ROM Font Replacer  VER: 0.7 REV: B';
   sProgramCopyright       = 'Copyright (C) 1998-2021 Microprogramming TECHNIQUES';
   sProgramAuthor          = 'Programming/PC Code: Alexandru Groza';
   sProgramRights          = 'All rights reserved.';

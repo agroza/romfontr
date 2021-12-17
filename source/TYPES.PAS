@@ -19,16 +19,16 @@ type
   TParameterErrors = set of TParameterError;
 
   TParameters = record
-    Offset: Longint;
-    FontFileSize: Longint;
-    BackupStatus: Boolean;
-
     BackupROMFile: Boolean;
     UpdateChecksum: Boolean;
+    Offset: Longint;
     ROMFileName: String;
     FontFileName: String;
 
     Errors: TParameterErrors;
+
+    FontFileSize: Longint;
+    BackupStatus: Boolean;
   end;
 
   TBinaryFile = File of Byte;
